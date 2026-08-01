@@ -1,0 +1,338 @@
+---
+title: "443 Project"
+date: "2025-04-07"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r}
+data <- read_csv("PRSA_Data_Dongsi_20130301-20170228.csv")
+weekday = read.csv("correctweekdays.csv")
+```
+
+```{r}
+#original dataset that includes missing values (i.e. NA values)
+data_missing = read_csv("PRSA_Data_Dongsi_20130301-20170228.csv")
+
+#imputing missing wd values with the wd from the previous row, which is the previous hour
+for(i in 2:nrow(data_missing)){
+  if(is.na(data_missing$wd[i])){
+    data_missing$wd[i] = data_missing$wd[i-1]
+  }
+}
+
+for(i in 2:nrow(data_missing)-1){
+  if(is.na(data_missing$PM2.5[i])){
+    data_missing$PM2.5[i] = (data_missing$PM2.5[i-1] + data_missing$PM2.5[i+1]) / 2
+  }
+  if(is.na(data_missing$PM2.5[i+1])){
+    data_missing$PM2.5[i+1] = data_missing$PM2.5[i] 
+  }
+}
+
+for(i in 2:nrow(data_missing)-1){
+  if(is.na(data_missing$PM10[i])){
+    data_missing$PM10[i] = (data_missing$PM10[i-1] + data_missing$PM10[i+1]) / 2
+  }
+  if(is.na(data_missing$PM10[i+1])){
+    data_missing$PM10[i+1] = data_missing$PM10[i] 
+  }
+}
+
+for(i in 2:nrow(data_missing)-1){
+  if(is.na(data_missing$SO2[i])){
+    data_missing$SO2[i] = (data_missing$SO2[i-1] + data_missing$SO2[i+1]) / 2
+  }
+  if(is.na(data_missing$SO2[i+1])){
+    data_missing$SO2[i+1] = data_missing$SO2[i] 
+  }
+}
+
+for(i in 2:nrow(data_missing)-1){
+  if(is.na(data_missing$NO2[i])){
+    data_missing$NO2[i] = (data_missing$NO2[i-1] + data_missing$NO2[i+1]) / 2
+  }
+  if(is.na(data_missing$NO2[i+1])){
+    data_missing$NO2[i+1] = data_missing$NO2[i] 
+  }
+}
+
+for(i in 2:nrow(data_missing)-1){
+  if(is.na(data_missing$CO[i])){
+    data_missing$CO[i] = (data_missing$CO[i-1] + data_missing$CO[i+1]) / 2
+  }
+  if(is.na(data_missing$CO[i+1])){
+    data_missing$CO[i+1] = data_missing$CO[i] 
+  }
+}
+
+for(i in 2:nrow(data_missing)-1){
+  if(is.na(data_missing$O3[i])){
+    data_missing$O3[i] = (data_missing$O3[i-1] + data_missing$O3[i+1]) / 2
+  }
+  if(is.na(data_missing$O3[i+1])){
+    data_missing$O3[i+1] = data_missing$O3[i] 
+  }
+}
+
+for(i in 2:nrow(data_missing)-1){
+  if(is.na(data_missing$TEMP[i])){
+    data_missing$TEMP[i] = (data_missing$TEMP[i-1] + data_missing$TEMP[i+1]) / 2
+  }
+  if(is.na(data_missing$TEMP[i+1])){
+    data_missing$TEMP[i+1] = data_missing$TEMP[i] 
+  }
+}
+
+for(i in 2:nrow(data_missing)-1){
+  if(is.na(data_missing$PRES[i])){
+    data_missing$PRES[i] = (data_missing$PRES[i-1] + data_missing$PRES[i+1]) / 2
+  }
+  if(is.na(data_missing$PRES[i+1])){
+    data_missing$PRES[i+1] = data_missing$PRES[i] 
+  }
+}
+
+for(i in 2:nrow(data_missing)-1){
+  if(is.na(data_missing$DEWP[i])){
+    data_missing$DEWP[i] = (data_missing$DEWP[i-1] + data_missing$DEWP[i+1]) / 2
+  }
+  if(is.na(data_missing$DEWP[i+1])){
+    data_missing$DEWP[i+1] = data_missing$DEWP[i]
+  }
+}
+
+for(i in 2:nrow(data_missing)-1){
+  if(is.na(data_missing$RAIN[i])){
+    data_missing$RAIN[i] = (data_missing$RAIN[i-1] + data_missing$RAIN[i+1]) / 2
+  }
+  if(is.na(data_missing$RAIN[i+1])){
+    data_missing$RAIN[i+1] = data_missing$RAIN[i]
+  }
+}
+
+for(i in 2:nrow(data_missing)-1){
+  if(is.na(data_missing$WSPM[i])){
+    data_missing$WSPM[i] = (data_missing$WSPM[i-1] + data_missing$WSPM[i+1]) / 2
+  }
+  if(is.na(data_missing$WSPM[i+1])){
+    data_missing$WSPM[i+1] = data_missing$WSPM[i]
+  }
+}
+
+colSums(is.na(data_missing))
+#renaming as data now that the NA values have been removed
+data = data_missing 
+```
+
+#Sam uploaded weekdays and graphs
+```{r}
+library(tidyverse)
+
+#earlier weekday dataset
+#correctweekdays.csv came from weekday.sas dataset
+weekday = read.csv("correctweekdays.csv")
+
+final = merge(x = data, y = weekday, by = "No", all.y = TRUE)
+
+ggplot(data = final, aes(x = weekday, y = PM2.5)) + geom_point(color = "blue")
+
+y = final %>%
+  pivot_wider(names_from = weekday, values_from = PM2.5)
+
+f = sum(y$Friday, na.rm = TRUE)
+sa = sum(y$Saturday, na.rm = TRUE)
+su = sum(y$Sunday, na.rm = TRUE)
+m = sum(y$Monday, na.rm = TRUE)
+tu = sum(y$Tuesday, na.rm = TRUE)
+w = sum(y$Wednesday, na.rm = TRUE)
+th = sum(y$Thursday, na.rm = TRUE)
+
+nextone = final %>%
+  mutate(PM10prev = last(PM2.5))
+
+
+b = final %>%
+  mutate(group = fct_relevel(weekday, c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")))
+
+options(scipen = 10000)
+
+#Code for the initial graphs, Pranavi edited them later so that they were color coded correctly
+ggplot(data = b, aes(x = group, y = PM2.5, fill = weekday)) +
+  geom_bar(stat = "summary", fun = "mean")
+
+ggplot(data = final, aes(x = hour, y = PM2.5, fill = hour, color = hour)) +
+  geom_bar(stat = "summary", fun = "mean") + scale_x_continuous(breaks = seq(0,23, by = 1)) + 
+  scale_y_continuous(breaks = seq(0,105, by = 35)) + 
+  scale_fill_gradient(low = "blue", high = "orange") + scale_color_gradient(low = "blue", high = "orange")
+
+ggplot(data = final, aes(x = month, y = PM2.5, fill = month, color = month)) + 
+  geom_bar(stat = "summary", fun = "mean") + scale_x_continuous(breaks = seq(0,12, by = 1)) + 
+  scale_fill_gradient(low = "blue", high = "orange") + 
+  scale_color_gradient(low = "blue", high = "orange")
+
+```
+
+```{r}
+library(fable)
+
+#Uploading aggregated data
+#lag dataset came from adjusted.sas file
+#When running the code, change from read.csv("lag (1).csv") to just read.csv("lag.csv"), it just reads this way because I created multiple files.
+lag = read.csv("lag (1).csv")
+
+agg = lag[-1,]
+
+agg = agg %>%
+  mutate(X = row_number()) %>%
+  #getting PM2.5total value to a 24 hour average
+  mutate(PM2.5total = PM2_5total / 24) %>%
+  #creating PM2.5yesterday column
+  mutate(PM2.5yesterday = (PMhour0yesterday + PMhour1yesterday + PMhour2yesterday + PMhour3yesterday + PMhour4yesterday + PMhour5yesterday + PMhour6yesterday + PMhour7yesterday + PMhour8yesterday + PMhour9yesterday + PMhour10yesterday + PMhour11yesterday + PMhour12yesterday + PMhour13yesterday + PMhour14yesterday + PMhour15yesterday + PMhour16yesterday + PMhour17yesterday + PMhour18yesterday + PMhour19yesterday + PMhour20yesterday + PMhour21yesterday + PMhour22yesterday + PMhour23yesterday)/24)
+
+#removing the individual values for each PM2.5 hour except for 11:00 PM
+agg = subset(agg, select = -PMhour0yesterday)
+agg = subset(agg, select = -PMhour1yesterday)
+agg = subset(agg, select = -PMhour2yesterday)
+agg = subset(agg, select = -PMhour3yesterday)
+agg = subset(agg, select = -PMhour4yesterday)
+agg = subset(agg, select = -PMhour5yesterday)
+agg = subset(agg, select = -PMhour6yesterday)
+agg = subset(agg, select = -PMhour7yesterday)
+agg = subset(agg, select = -PMhour8yesterday)
+agg = subset(agg, select = -PMhour9yesterday)
+agg = subset(agg, select = -PMhour10yesterday)
+agg = subset(agg, select = -PMhour11yesterday)
+agg = subset(agg, select = -PMhour12yesterday)
+agg = subset(agg, select = -PMhour13yesterday)
+agg = subset(agg, select = -PMhour14yesterday)
+agg = subset(agg, select = -PMhour15yesterday)
+agg = subset(agg, select = -PMhour16yesterday)
+agg = subset(agg, select = -PMhour17yesterday)
+agg = subset(agg, select = -PMhour18yesterday)
+agg = subset(agg, select = -PMhour19yesterday)
+agg = subset(agg, select = -PMhour20yesterday)
+agg = subset(agg, select = -PMhour21yesterday)
+agg = subset(agg, select = -PMhour22yesterday)
+#agg = subset(agg, select = -PMhour23yesterday)
+agg = subset(agg, select = -PM2_5total)
+```
+
+```{r}
+#Creating training and testing dataset, filtering such that training is 80% of the data, testing is 20%
+training = agg %>%
+  filter(X <= 1168)
+
+testing = agg %>%
+  filter (X > 1168)
+
+#Adding and subtracting predictors using backwards selection. If a column is commented out, it means that it affects the model positively, and should be kept
+tsdat = subset(training, select = -year)
+tsdat = subset(tsdat, select = -weekday)
+tsdat = subset(tsdat, select = -No)
+tsdat = subset(tsdat, select = -month)
+tsdat = subset(tsdat, select = -day)
+tsdat = subset(tsdat, select = -wd)
+tsdat = subset(tsdat, select = -X)
+tsdat = subset(tsdat, select = -PM2.5total)
+tsdat = subset(tsdat, select = -PM2.5yesterday)
+#tsdat = subset(tsdat, select = -RAINyesterday)
+#tsdat = subset(tsdat, select = -WSPMyesterday)
+tsdat = subset(tsdat, select = -TEMPyesterday)
+tsdat = subset(tsdat, select = -PRESyesterday)
+tsdat = subset(tsdat, select = -DEWPyesterday)
+#tsdat = subset(tsdat, select = -COyesterday)
+#tsdat = subset(tsdat, select = -PMhour23yesterday)
+#tsdat = subset(tsdat, select = -NO2yesterday)
+#tsdat = subset(tsdat, select = -O3yesterday)
+#tsdat = subset(tsdat, select = -SO2yesterday)
+tsdat = subset(tsdat, select = -PM10yesterday)
+
+#Creating a matrix that the Arima model can read
+mat = as.matrix(tsdat)
+
+#Creating a time series for the Arima model
+myts = ts(training$PM2.5total, start = c(2013,3,1), frequency = 365)
+
+length(myts)
+
+plot(myts)
+mod = arima(myts, xreg = mat)
+
+#Same as above for tsdat. This is just for the matrix fo r the testing variables
+tpdat = subset(testing, select = -year)
+tpdat = subset(tpdat, select = -weekday)
+tpdat = subset(tpdat, select = -No)
+tpdat = subset(tpdat, select = -month)
+tpdat = subset(tpdat, select = -day)
+tpdat = subset(tpdat, select = -wd)
+tpdat = subset(tpdat, select = -X)
+tpdat = subset(tpdat, select = -PM2.5total)
+tpdat = subset(tpdat, select = -PM2.5yesterday)
+#tpdat = subset(tpdat, select = -RAINyesterday)
+#tpdat = subset(tpdat, select = -WSPMyesterday)
+tpdat = subset(tpdat, select = -TEMPyesterday)
+tpdat = subset(tpdat, select = -PRESyesterday)
+tpdat = subset(tpdat, select = -DEWPyesterday)
+#tpdat = subset(tpdat, select = -COyesterday)
+#tpdat = subset(tpdat, select = -PMhour23yesterday)
+#tpdat = subset(tpdat, select = -NO2yesterday)
+#tpdat = subset(tpdat, select = -O3yesterday)
+#tpdat = subset(tpdat, select = -SO2yesterday)
+tpdat = subset(tpdat, select = -PM10yesterday)
+
+#Created matrix from the testing dataset. This is so we can use the predict function to predict future values.
+mat2 = as.matrix(tpdat)
+
+#Predicting future values
+predict = predict(mod, newxreg = mat2, h = 660)
+
+#Creating variable for the predicted columns
+val = predict$pred
+
+testing = testing %>%
+  #Added new column called val which included predicted variables from the predict function
+  mutate(val = val) %>%
+  #Manually calculated predicted variables using model coefficients (calculated below). Done to see the difference between the predicted values using the predict function, and the predicted values by manually calculating it.
+  mutate(valmod = 46.9543 + (0.2599 * SO2yesterday) + (-0.0776 * NO2yesterday) + (-0.0068 * COyesterday) + (0.0683 * O3yesterday) + (-10.5803 * RAINyesterday) + (-6.5781 * WSPMyesterday) + (0.5809 * PMhour23yesterday)) %>%
+  #TmrwLevel is a column that contains the category the actual PM2.5 values are in, done in a numeric format (0 to 3, lowest to highest, buffer categories are represented by a .5), so that it's easier to work with.
+  mutate(TmrwLevel = ifelse((PM2.5total) < 25, 0, ifelse((PM2.5total) < 45, 0.5, ifelse((PM2.5total) < 65, 1, ifelse((PM2.5total) < 85, 1.5, ifelse((PM2.5total) < 95, 2, ifelse((PM2.5total) < 115, 2.5, 3))))))) %>%
+  #Same thing as TmrwLevel, but for the predicted values
+    mutate(PredLevel = ifelse((valmod) < 25, 0, ifelse((valmod) < 45, 0.5, ifelse((valmod) < 65, 1, ifelse((valmod) < 85, 1.5, ifelse((valmod) < 95, 2, ifelse((valmod) < 115, 2.5, 3))))))) %>%
+  #Absolute value of the difference between the actual and the predicted category. If the difference is 0, then the predicted value is in the correct category. If it's 0.5, then it's off by 1 category. If the test value is 1, that means the predicted category is the same as the actual category, or in the next category over. If it's 0, then it's not
+    mutate(test = ifelse(abs(TmrwLevel - PredLevel) < 1, 1, 0)) %>%
+  #Difference between valmod and val, explained above
+  mutate(r = valmod - val)
+
+#1 indicates correct, and 0 indicates incorrect, so the mean value will tell us the percentage of correct guesses.
+mean(testing$test)
+
+
+```
+
+```{r} 
+#Some model statistics, able to get coefficients for the model.
+summary(mod)
+summary(predict$se)
+```
+
+```{r}
+#Creating a plot of the actual values versus the predicted values.
+myts1 = ts(testing$PM2.5total, start = c(2016,5,13), frequency = 365)
+myts2 = ts(testing$valmod, start = c(2016,5,13), frequency = 365)
+
+plot(myts1, ylab = "PM2.5 level in ug/m^3 ", xlim = c(2016, 2017), xaxp = c(2016, 2018, 2))
+lines(myts2, col = "red")
+
+legend(1, 2, legend = c("actual", "predicted"), fill = c("black", "red"))
+```
